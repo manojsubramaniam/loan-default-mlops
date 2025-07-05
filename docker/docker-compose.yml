@@ -76,8 +76,8 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ../notebooks:/home/jovyan/work
-      - ../data:/home/jovyan/data
+      - ..:/home/jovyan/work
+    command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.allow_origin='*' --NotebookApp.allow_remote_access=True --NotebookApp.disable_check_xsrf=True --NotebookApp.ip='0.0.0.0'
     networks:
       - mlops_net
     restart: unless-stopped
@@ -95,6 +95,29 @@ services:
       - ../mlruns:/app/mlruns
       - ../mlflow:/app/mlflow
     command: ["python", "src/model/train_model.py"]
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter
+    container_name: node_exporter
+    ports:
+      - "9100:9100"
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
     networks:
       - mlops_net
     restart: unless-stopped

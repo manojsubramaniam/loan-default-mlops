@@ -41,10 +41,10 @@ jobs:
       run: |
         echo "${{ secrets.SERVER_SSH_KEY }}" > key.pem
         chmod 600 key.pem
-        ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@<YOUR_SERVER_IP> '
+        ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@13.48.138.147 '
           cd loan-default-mlops &&
           git pull &&
-          docker-compose down &&
-          docker-compose up --build -d
+          docker compose down &&
+          docker compose up --build -d
         '
 
