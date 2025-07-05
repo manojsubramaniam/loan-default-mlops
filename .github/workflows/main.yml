@@ -50,19 +50,19 @@ jobs:
         export MLFLOW_EXPERIMENT_NAME=LoanDefaultDVC
 
         python <<EOF
-import mlflow
-import json
-import os
+        import mlflow
+        import json
+        import os
+        
+        mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
+        mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
 
-mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
-mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
-
-with mlflow.start_run():
-    with open("metrics.json") as f:
-        metrics = json.load(f)
-    for k, v in metrics.items():
-        mlflow.log_metric(k, v)
-EOF
+        with mlflow.start_run():
+            with open("metrics.json") as f:
+                metrics = json.load(f)
+            for k, v in metrics.items():
+                mlflow.log_metric(k, v)
+        EOF
     - name: Upload trained model artifact
       uses: actions/upload-artifact@v4
       with:
