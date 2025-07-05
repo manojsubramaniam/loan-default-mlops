@@ -6,6 +6,7 @@ import mlflow
 import mlflow.sklearn
 import joblib
 import os
+import json
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, f1_score, roc_auc_score
@@ -127,3 +128,16 @@ with mlflow.start_run():
 os.makedirs("models", exist_ok=True)
 joblib.dump(pipeline, "models/best_model.pkl")
 print("📦 Model saved at: models/best_model.pkl")
+
+# ✅ Save evaluation metrics for DVC
+metrics = {
+    "accuracy": acc,
+    "f1_score": f1,
+    "roc_auc": roc
+}
+
+with open("metrics.json", "w") as f:
+    json.dump(metrics, f)
+
+print("📊 Metrics saved to metrics.json for DVC tracking.")
+

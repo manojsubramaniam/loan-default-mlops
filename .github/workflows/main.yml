@@ -23,7 +23,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install flake8 black pytest
+        pip install flake8 black pytest dvc[all] mlflow
 
     - name: Auto-format with black
       run: |
@@ -37,6 +37,29 @@ jobs:
     - name: Run unit tests
       run: |
         pytest
+
+    - name: Run DVC pipeline
+      run: |
+        dvc pull
+        dvc repro
+        echo "✅ DVC pipeline executed"
+
+    - name: Sync DVC metrics to MLflow
+      run: |
+        export MLFLOW_TRACKING_URI=http://18.206.169.206:5000
+        export MLFLOW_EXPERIMENT_NAME=LoanDefaultDVC
+
+        python -c "
+import mlflow
+import json
+
+mlflow.set_tracking_uri('${MLFLOW_TRACKING_URI}')
+mlflow.set_experiment('${MLFLOW_EXPERIMENT_NAME}')
+with mlflow.start_run():
+    metrics = json.load(open('metrics.json'))
+    for k, v in metrics.items():
+        mlflow.log_metric(k, v)
+"
 
     - name: Build Docker image
       run: docker build -t loan-default-app .
@@ -52,4 +75,9 @@ jobs:
           docker compose down &&
           docker compose up --build -d
         '
+   - name: Install DVC
+     run: |
+       pip install dvc
+   - name: Run DVC pipeline
+     run: dvc repro
 

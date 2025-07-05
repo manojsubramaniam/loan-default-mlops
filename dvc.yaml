@@ -1,0 +1,43 @@
+stages:
+  load:
+    cmd: python src/data/load_data.py
+    deps:
+      - src/data/load_data.py
+      - data/raw/Dataset.csv
+    outs:
+      - data/loaded.csv
+
+  preprocess:
+    cmd: python src/data/preprocess.py
+    deps:
+      - src/data/preprocess.py
+      - data/loaded.csv
+    outs:
+      - data/preprocessed.csv
+
+  feature_engineering:
+    cmd: python src/features/build_features.py
+    deps:
+      - src/features/build_features.py
+      - data/preprocessed.csv
+    outs:
+      - data/processed/features.csv
+
+  train:
+    cmd: python src/model/train_model.py
+    deps:
+      - src/model/train_model.py
+      - data/processed/features.csv
+    outs:
+      - models/best_model.pkl
+    metrics:
+      - metrics.json
+
+  evaluate:
+    cmd: python src/model/evaluate_model.py
+    deps:
+      - src/model/evaluate_model.py
+      - models/best_model.pkl
+    outs:
+      - models/eval_report.json
+

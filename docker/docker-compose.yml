@@ -2,14 +2,51 @@ version: "3.8"
 
 services:
   api:
-    build:
-      context: ..
-      dockerfile: Dockerfile
+    image: python:3.12-slim
     container_name: loan_api
+    working_dir: /app
+    command: >
+      sh -c "pip install --upgrade pip &&
+             pip install -r requirements.txt &&
+             uvicorn src.api.api:app --host 0.0.0.0 --port 8000 --reload"
     ports:
       - "8000:8000"
+    volumes:
+      - ..:/app
     depends_on:
       - mlflow
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+  trainer:
+    image: python:3.12-slim
+    container_name: loan_trainer
+    working_dir: /app
+    command: >
+      sh -c "pip install --upgrade pip &&
+             pip install -r requirements.txt &&
+             echo 'Use the DVC container for pipeline execution'"
+    volumes:
+      - ..:/app
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+  dvc:
+    image: python:3.12-slim
+    container_name: loan_dvc
+    working_dir: /app
+    stdin_open: true
+    tty: true
+    entrypoint: sh -c
+    command: >
+      "pip install --upgrade pip &&
+       pip install 'dvc[all]' &&
+       dvc init --no-scm &&
+       dvc remote add -f -d storage .dvc/storage &&
+       dvc repro &&
+       echo '✅ DVC pipeline executed successfully'"
     volumes:
       - ..:/app
     networks:
@@ -17,10 +54,15 @@ services:
     restart: unless-stopped
 
   streamlit:
-    build:
-      context: ..
-      dockerfile: Dockerfile.streamlit
+    image: python:3.12-slim
     container_name: loan_streamlit
+    working_dir: /app
+    command: >
+      sh -c "apt-get update &&
+             apt-get install -y libglib2.0-0 libsm6 libxrender1 libxext6 libjpeg-dev &&
+             pip install --upgrade pip &&
+             pip install -r requirements.txt &&
+             streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0"
     ports:
       - "8501:8501"
     volumes:
@@ -71,30 +113,17 @@ services:
     restart: unless-stopped
 
   jupyter:
-    image: jupyter/scipy-notebook
+    image: python:3.12-slim
     container_name: loan_jupyter
+    working_dir: /app
     ports:
       - "8888:8888"
+    command: >
+      sh -c "pip install --upgrade pip &&
+             pip install jupyter &&
+             jupyter notebook --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token='' --NotebookApp.password=''"
     volumes:
-      - ..:/home/jovyan/work
-    command: start-notebook.sh --NotebookApp.token='' --NotebookApp.password='' --NotebookApp.allow_origin='*' --NotebookApp.allow_remote_access=True --NotebookApp.disable_check_xsrf=True --NotebookApp.ip='0.0.0.0'
-    networks:
-      - mlops_net
-    restart: unless-stopped
-
-  trainer:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    container_name: loan_trainer
-    depends_on:
-      - mlflow
-    volumes:
-      - ../data:/app/data
-      - ../models:/app/models
-      - ../mlruns:/app/mlruns
-      - ../mlflow:/app/mlflow
-    command: ["python", "src/model/train_model.py"]
+      - ..:/app
     networks:
       - mlops_net
     restart: unless-stopped
