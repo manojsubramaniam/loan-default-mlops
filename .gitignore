@@ -8,3 +8,9 @@ models/
 data/
 *.log
 
+
+# Ignore large or generated files
+models/*.pkl
+mlruns/
+venv/
+__pycache__/
