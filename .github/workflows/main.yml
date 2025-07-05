@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4  # ✅ upgraded to v4
+      uses: actions/checkout@v4  # ✅ latest version
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -44,12 +44,6 @@ jobs:
         dvc repro
         echo "✅ DVC pipeline executed"
 
-    - name: Upload trained model artifact
-      uses: actions/upload-artifact@v4  # ✅ use v4 to avoid deprecation
-      with:
-        name: trained-model
-        path: models/best_model.pkl  # update if your model path is different
-
     - name: Sync DVC metrics to MLflow
       run: |
         export MLFLOW_TRACKING_URI=http://18.206.169.206:5000
@@ -66,6 +60,12 @@ with mlflow.start_run():
     for k, v in metrics.items():
         mlflow.log_metric(k, v)
 "
+
+    - name: Upload trained model artifact
+      uses: actions/upload-artifact@v4  # ✅ use v4
+      with:
+        name: trained-model
+        path: models/best_model.pkl  # ⬅️ Update if your path is different
 
     - name: Build Docker image
       run: docker build -t loan-default-app .
