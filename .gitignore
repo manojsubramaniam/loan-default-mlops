@@ -1,0 +1,10 @@
+# .gitignore
+venv/
+__pycache__/
+*.pyc
+*.pkl
+mlruns/
+models/
+data/
+*.log
+
