@@ -20,6 +20,7 @@ Instrumentator().instrument(app).expose(app)
 # API key for basic access control (change this!)
 API_KEY = "mysecureapikey"
 
+
 # Define the input schema
 class LoanApplication(BaseModel):
     Client_Income: float
@@ -62,10 +63,12 @@ class LoanApplication(BaseModel):
     Phone_Change: float
     Credit_Bureau: float
 
+
 # Home route
 @app.get("/")
 def read_root():
     return {"message": "Loan Default Prediction API is running 🚀"}
+
 
 # Prediction endpoint with API key check
 @app.post("/predict")
@@ -77,12 +80,9 @@ def predict(application: LoanApplication, x_api_key: str = Header(...)):
     prediction = model.predict(input_data)[0]
     proba = model.predict_proba(input_data)[0][1]
 
-    return {
-        "prediction": int(prediction),
-        "probability_of_default": round(proba, 4)
-    }
+    return {"prediction": int(prediction), "probability_of_default": round(proba, 4)}
+
 
 # Local run
 if __name__ == "__main__":
     uvicorn.run("src.api.api:app", host="0.0.0.0", port=8000, reload=True)
-

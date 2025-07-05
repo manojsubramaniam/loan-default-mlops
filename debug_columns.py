@@ -6,4 +6,3 @@ df = pd.read_csv("data/raw/Dataset.csv", low_memory=False)
 print("COLUMN NAMES:\n")
 for col in df.columns:
     print(f"- '{col}'")
-

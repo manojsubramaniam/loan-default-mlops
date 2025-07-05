@@ -58,31 +58,52 @@ transformers = []
 
 if num_cols:
     transformers.append(
-        ("num", Pipeline([
-            ("imputer", SimpleImputer(strategy="median")),
-            ("scaler", StandardScaler())
-        ]), num_cols)
+        (
+            "num",
+            Pipeline(
+                [
+                    ("imputer", SimpleImputer(strategy="median")),
+                    ("scaler", StandardScaler()),
+                ]
+            ),
+            num_cols,
+        )
     )
 
 if cat_cols:
     transformers.append(
-        ("cat", Pipeline([
-            ("imputer", SimpleImputer(strategy="most_frequent")),
-            ("encoder", OrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1))
-        ]), cat_cols)
+        (
+            "cat",
+            Pipeline(
+                [
+                    ("imputer", SimpleImputer(strategy="most_frequent")),
+                    (
+                        "encoder",
+                        OrdinalEncoder(
+                            handle_unknown="use_encoded_value", unknown_value=-1
+                        ),
+                    ),
+                ]
+            ),
+            cat_cols,
+        )
     )
 
 # Column transformer
 preprocessor = ColumnTransformer(transformers=transformers)
 
 # Final pipeline
-pipeline = Pipeline([
-    ("preprocessor", preprocessor),
-    ("classifier", RandomForestClassifier(n_estimators=100, random_state=42))
-])
+pipeline = Pipeline(
+    [
+        ("preprocessor", preprocessor),
+        ("classifier", RandomForestClassifier(n_estimators=100, random_state=42)),
+    ]
+)
 
 # Split dataset
-X_train, X_test, y_train, y_test = train_test_split(X, y, stratify=y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, stratify=y, test_size=0.2, random_state=42
+)
 
 # ✅ Start MLflow run
 with mlflow.start_run():
@@ -106,4 +127,3 @@ with mlflow.start_run():
 os.makedirs("models", exist_ok=True)
 joblib.dump(pipeline, "models/best_model.pkl")
 print("📦 Model saved at: models/best_model.pkl")
-

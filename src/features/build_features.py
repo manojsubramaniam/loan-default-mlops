@@ -2,6 +2,7 @@
 
 import pandas as pd
 
+
 def build_features(df: pd.DataFrame) -> pd.DataFrame:
     """
     Create or transform features here before preprocessing.
@@ -28,4 +29,3 @@ def build_features(df: pd.DataFrame) -> pd.DataFrame:
     # You can add more domain-specific features here
 
     return df
-
