@@ -44,6 +44,12 @@ jobs:
         dvc repro
         echo "✅ DVC pipeline executed"
 
+    - name: Upload trained model artifact
+      uses: actions/upload-artifact@v4  # ✅ use v4 to avoid deprecation
+      with:
+        name: trained-model
+        path: models/best_model.pkl  # update if your model path is different
+
     - name: Sync DVC metrics to MLflow
       run: |
         export MLFLOW_TRACKING_URI=http://18.206.169.206:5000
