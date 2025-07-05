@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4  # ✅ latest version
+      uses: actions/checkout@v4
 
     - name: Set up Python
       uses: actions/setup-python@v4
@@ -27,7 +27,7 @@ jobs:
 
     - name: Auto-format with black
       run: |
-        black .  # You can add --check to fail if formatting needed
+        black .
 
     - name: Lint with flake8
       run: |
@@ -49,23 +49,25 @@ jobs:
         export MLFLOW_TRACKING_URI=http://18.206.169.206:5000
         export MLFLOW_EXPERIMENT_NAME=LoanDefaultDVC
 
-        python -c "
+        python <<EOF
 import mlflow
 import json
+import os
 
-mlflow.set_tracking_uri('${MLFLOW_TRACKING_URI}')
-mlflow.set_experiment('${MLFLOW_EXPERIMENT_NAME}')
+mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
+mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
 with mlflow.start_run():
-    metrics = json.load(open('metrics.json'))
+    with open("metrics.json") as f:
+        metrics = json.load(f)
     for k, v in metrics.items():
         mlflow.log_metric(k, v)
-"
+EOF
 
     - name: Upload trained model artifact
-      uses: actions/upload-artifact@v4  # ✅ use v4
+      uses: actions/upload-artifact@v4
       with:
         name: trained-model
-        path: models/best_model.pkl  # ⬅️ Update if your path is different
+        path: models/best_model.pkl  # Update if your model path is different
 
     - name: Build Docker image
       run: docker build -t loan-default-app .
