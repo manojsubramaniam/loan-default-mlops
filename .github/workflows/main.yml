@@ -10,10 +10,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      MLFLOW_TRACKING_URI: http://18.206.169.206:5000
-      MLFLOW_EXPERIMENT_NAME: LoanDefaultDVC
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -29,7 +25,7 @@ jobs:
         pip install -r requirements.txt
         pip install flake8 black pytest dvc[all] mlflow
 
-    - name: Auto-format code with black
+    - name: Auto-format with black
       run: |
         black .
 
@@ -38,26 +34,35 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
 
-    - name: Pull and run DVC pipeline
+    - name: Run unit tests
+      run: |
+        pytest
+
+    - name: Set up SSH for DVC
+      run: |
+        echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+
+    - name: Run DVC pipeline
       run: |
         dvc pull
         dvc repro
         echo "✅ DVC pipeline executed"
 
-    - name: Run unit tests
-      run: |
-        pytest
-
     - name: Sync DVC metrics to MLflow
       run: |
+        export MLFLOW_TRACKING_URI=http://18.206.169.206:5000
+        export MLFLOW_EXPERIMENT_NAME=LoanDefaultDVC
+
         python <<EOF
         import mlflow
         import json
         import os
-      
+
         mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
         mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
-        
+
         with mlflow.start_run():
             with open("metrics.json") as f:
                 metrics = json.load(f)
@@ -69,20 +74,19 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: trained-model
-        path: models/best_model.pkl  # Adjust if path differs
+        path: models/best_model.pkl  # Update if your model path is different
 
     - name: Build Docker image
-      run: |
-        docker build -t loan-default-app .
+      run: docker build -t loan-default-app .
 
     - name: Deploy to remote server
       if: github.ref == 'refs/heads/main'
       run: |
         echo "${{ secrets.SERVER_SSH_KEY }}" > key.pem
         chmod 600 key.pem
-        ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@18.206.169.206 << 'EOF'
-          cd loan-default-mlops
-          git pull
-          docker compose down
+        ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@18.206.169.206 '
+          cd loan-default-mlops &&
+          git pull &&
+          docker compose down &&
           docker compose up --build -d
-          EOF
+        '
