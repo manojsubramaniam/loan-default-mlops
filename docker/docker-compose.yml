@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: loan_api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mlflow
+    volumes:
+      - ..:/app
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+  streamlit:
+    build:
+      context: ..
+      dockerfile: Dockerfile.streamlit
+    container_name: loan_streamlit
+    ports:
+      - "8501:8501"
+    volumes:
+      - ..:/app
+    depends_on:
+      - api
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow
+    container_name: loan_mlflow
+    ports:
+      - "5000:5000"
+    environment:
+      - MLFLOW_TRACKING_URI=http://0.0.0.0:5000
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+    volumes:
+      - ../mlflow:/mlflow
+      - ../mlruns:/mlruns
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus
+    container_name: loan_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana
+    container_name: loan_grafana
+    ports:
+      - "3000:3000"
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+  jupyter:
+    image: jupyter/scipy-notebook
+    container_name: loan_jupyter
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../notebooks:/home/jovyan/work
+      - ../data:/home/jovyan/data
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+  trainer:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: loan_trainer
+    depends_on:
+      - mlflow
+    volumes:
+      - ../data:/app/data
+      - ../models:/app/models
+      - ../mlruns:/app/mlruns
+      - ../mlflow:/app/mlflow
+    command: ["python", "src/model/train_model.py"]
+    networks:
+      - mlops_net
+    restart: unless-stopped
+
+networks:
+  mlops_net:
+    driver: bridge
+
