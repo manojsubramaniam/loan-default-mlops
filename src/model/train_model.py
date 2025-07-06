@@ -14,6 +14,7 @@ from sklearn.preprocessing import StandardScaler, OrdinalEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
+from src.drift_detection.detect_drift import detect_drift  # Import drift detection
 
 # ✅ SET TRACKING URI to Docker MLflow service
 mlflow.set_tracking_uri("http://mlflow:5000")
@@ -140,4 +141,11 @@ with open("metrics.json", "w") as f:
     json.dump(metrics, f)
 
 print("📊 Metrics saved to metrics.json for DVC tracking.")
+
+# ✅ Detect Drift (add drift detection step after model training)
+detect_drift(
+    reference_data_path="data/raw/Dataset.csv",  # Historical data
+    current_data_path="data/processed/features.csv",  # Latest data for comparison
+    output_path="drift_report.html"  # Output drift report
+)
 

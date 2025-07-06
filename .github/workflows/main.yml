@@ -51,19 +51,21 @@ jobs:
         dvc repro
         echo "✅ DVC pipeline executed"
 
+    - name: Run Drift Detection
+      run: |
+        python src/drift_detection/detect_drift.py
+        echo "✅ Drift detection completed"
+
     - name: Sync DVC metrics to MLflow
       run: |
         export MLFLOW_TRACKING_URI=http://18.206.169.206:5000
         export MLFLOW_EXPERIMENT_NAME=LoanDefaultDVC
-
         python <<EOF
         import mlflow
         import json
         import os
-
         mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
         mlflow.set_experiment(os.environ["MLFLOW_EXPERIMENT_NAME"])
-
         with mlflow.start_run():
             with open("metrics.json") as f:
                 metrics = json.load(f)
@@ -75,7 +77,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: trained-model
-        path: models/best_model.pkl  # Update if different
+        path: models/best_model.pkl
 
     - name: Build Docker image
       run: docker build -t loan-default-app .
@@ -90,5 +92,4 @@ jobs:
           git pull &&
           docker compose down &&
           docker compose up --build -d
-        '
 

@@ -32,7 +32,6 @@ services:
     networks:
       - mlops_net
     restart: unless-stopped
-
   dvc:
     image: python:3.12-slim
     container_name: loan_dvc
@@ -41,17 +40,19 @@ services:
     tty: true
     entrypoint: sh -c
     command: >
-      "pip install --upgrade pip &&
-       pip install 'dvc[all]' &&
-       dvc init --no-scm &&
-       dvc remote add -f -d storage .dvc/storage &&
-       dvc repro &&
-       echo '✅ DVC pipeline executed successfully'"
+      pip install --upgrade pip &&
+      pip install 'dvc[all]' &&
+      dvc init --no-scm &&
+      dvc remote add -f -d storage .dvc/storage &&
+      dvc repro &&
+      echo '✅ DVC pipeline executed successfully' &&
+      tail -f /dev/null
     volumes:
       - ..:/app
     networks:
       - mlops_net
     restart: unless-stopped
+
 
   streamlit:
     image: python:3.12-slim
