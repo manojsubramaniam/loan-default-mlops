@@ -33,7 +33,7 @@ def test_api_predict():
         "Homephone_Tag": 0,
         "Workphone_Working": 1,
         "Client_Family_Members": 3,
-        "Cleint_City_Rating": 2,
+        "Client_City_Rating": 2,
         "Application_Process_Day": 5,
         "Application_Process_Hour": 12,
         "Score_Source_1": 0.62,
