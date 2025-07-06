@@ -1,7 +1,7 @@
 import requests
 import json
 
-API_URL = "http://localhost:8000/predict"  # Change if using public IP
+API_URL = "http://18.206.169.206:8000/predict"  # Change if using public IP
 API_KEY = "mysecureapikey"
 
 payload = {
