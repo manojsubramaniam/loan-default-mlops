@@ -18,8 +18,8 @@ def test_api_predict():
         "Registration_Days": -4000,
         "ID_Days": -2500,
         "Client_Occupation": "Laborers",
-        "Client_Permanent_Match_Tag": 1,
-        "Client_Contact_Work_Tag": 0,
+        "Client_Permanent_Match_Tag": "Yes",  # Updated to str
+        "Client_Contact_Work_Tag": "No",      # Updated to str
         "Type_Organization": "Business Entity Type 3",
         "Score_Source_3": 0.45,
         "ID": 1,
@@ -32,8 +32,8 @@ def test_api_predict():
         "Mobile_Tag": 1,
         "Homephone_Tag": 0,
         "Workphone_Working": 1,
-        "Client_Family_Members": 3,
-        "Client_City_Rating": 2,
+        "Client_Family_Members": 3.0,
+        "Cleint_City_Rating": 2.0,  # ✅ Typo matches model
         "Application_Process_Day": 5,
         "Application_Process_Hour": 12,
         "Score_Source_1": 0.62,
@@ -43,6 +43,10 @@ def test_api_predict():
         "Credit_Bureau": 3.0
     }
 
-    response = requests.post("http://18.206.169.206:8000/predict", json=sample_data)
+    headers = {"x-api-key": "mysecureapikey"}  # ✅ Include API key
+
+    response = requests.post("http://18.206.169.206:8000/predict", json=sample_data, headers=headers)
+    
     assert response.status_code == 200
-    assert "default_probability" in response.json()
+    assert "prediction" in response.json()
+    assert "probability_of_default" in response.json()
